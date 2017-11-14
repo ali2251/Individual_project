@@ -40,13 +40,39 @@ public class PacketProcessing implements PacketProcessingListener {
                 byte[] payload = packetReceived.getPayload();
 
 
+                if(payload.length == 0) {
+
+                    System.out.println("\n\n\n\n" + "packet length 0");
+                    Long timeNow = System.nanoTime();
+
+                    //    System.out.println("received timed: " + timeNow);
+
+                    Long packetSentTime = PacketSender.sentTime;
+                    //System.out.println("sent time here for received----->" + packetSentTime);
+
+                    Long latency = timeNow - packetSentTime;
+
+                    LatencyMonitor.latency = latency;
+
+                }
+
+               // System.out.println("packet payload is::::::::" + payload.length);
+
+
+
+              /*  System.out.println(" ");
+                for (int i = 0; i < payload.length; i++) {
+                    System.out.print(payload[i] + ", ");
+                }
+                System.out.println(); */
 
                 byte[] srcMacRaw = PacketParsingUtils.extractSrcMac(payload);
                 String srcMac = PacketParsingUtils.rawMacToString(srcMacRaw);
 
 
                 if (srcMac.equals("BA:DB:AD:BA:DB:AD")) {
-                    //  System.out.println("pacekt addrwess matched");
+
+                     System.out.println("pacekt addrwess matched");
 
                     Long timeNow = System.nanoTime();
 
@@ -60,7 +86,8 @@ public class PacketProcessing implements PacketProcessingListener {
                     LatencyMonitor.latency = latency;
 
 
-  /*          System.out.println("latency is------> " + latency );
+            System.out.println("latency is------> " + latency );
+            /*
 
 
             System.out.println("latency monitors latency is this---->" +  LatencyMonitor.latency);
