@@ -32,69 +32,62 @@ public class LatencyMonitor implements MonitoringListener {
     private static ArrayList<Link> links = new ArrayList<>();
     private static PacketProcessingService packetProcessingService;
     private static PacketSender packetSender;
+    private static final Long NUMBER_OF_PACKETS = 100L;
 
-    public LatencyMonitor(DataBroker dataBroker, PacketSender packetSender1)  {
+    public LatencyMonitor(DataBroker dataBroker, PacketSender packetSender1) {
         db = dataBroker;
         packetSender = packetSender1;
     }
-    public LatencyMonitor() {}
+
+    public LatencyMonitor() {
+    }
 
 
     public void onTopologyChanged(TopologyChanged notification) {
 
     }
 
-    public void onLatencyPacket(LatencyPacket notification){
+    public void onLatencyPacket(LatencyPacket notification) {
 
-        System.out.println("Reched here");
-        System.out.println(notification.getLatency());
+       // System.out.println("Reched here");
+        //System.out.println(notification.getLatency());
     }
 
 
     public Long MeasureNextLink(Link link) {
 
 
-        latency = -10000000L;
+        Long averageLatency = 0L;
+
         String node_id = link.getSource().getSourceNode().getValue();
         String node_connector_id = link.getSource().getSourceTp().getValue();
 
 
 
 
-        boolean success = packetSender.sendPacketToController(0, node_id, node_connector_id);
+        for (int i = 0; i < NUMBER_OF_PACKETS; i++) {
 
-        System.out.println("success " + success);
+            latency = -10000000L;
 
-        while (latency.equals(-10000000L)) {
-            //waiting
-            System.out.print("");
+            packetSender.sendPacket(0, node_connector_id, node_id);
 
-        }
-        //latency is now not -1
+            while (latency.equals(-10000000L)) {
+                //waiting
+                System.out.print("");
 
+            }
 
-        Long controllerLatency = latency;
-        System.out.println("controller latency is " + controllerLatency);
-
-
-        latency = -10000000L;
-        packetSender.sendPacket(0, node_connector_id, node_id);
-
-        while (latency.equals(-10000000L)) {
-            //waiting
-            System.out.print("");
+            averageLatency += latency;
 
         }
 
-        System.out.println("overall latency is " + latency);
 
 
-        Long latencyToreturn =  latency - controllerLatency;
 
-        System.out.println("latency then is " + latencyToreturn);
+        Long latencyToreturn = averageLatency / NUMBER_OF_PACKETS;
 
 
-        return latencyToreturn;
+        return latencyToreturn / 1000;
 
 
     }
@@ -102,25 +95,17 @@ public class LatencyMonitor implements MonitoringListener {
 
     public Long MeasureNextLinkJitter(Link link) {
 
+        Long averageJitter = 0L;
+
         latency = -10000000L;
         String node_id = link.getSource().getSourceNode().getValue();
         String node_connector_id = link.getSource().getSourceTp().getValue();
 
 
-         packetSender.sendPacketToController(0, node_id, node_connector_id);
+        for (int i = 0; i < NUMBER_OF_PACKETS ; i++) {
 
 
-        while (latency.equals(-10000000L)) {
-            //waiting
-            System.out.print("");
 
-        }
-        //latency is now not -1
-
-
-        Long controllerLatency = latency;
-
-        latency = -10000000L;
         packetSender.sendPacket(0, node_connector_id, node_id);
         while (latency.equals(-10000000L)) {
             //waiting
@@ -128,38 +113,28 @@ public class LatencyMonitor implements MonitoringListener {
 
         }
         //latency is now not -1
-        Long latency1 = latency - controllerLatency;
+        Long latency1 = latency;
 
         latency = -10000000L;
 
-
-        packetSender.sendPacketToController(0, node_id, node_connector_id);
-
-
-        while (latency.equals(-10000000L)) {
-            //waiting
-            System.out.print("");
-
-        }
-        //latency is now not -1
-
-
-        Long controllerLatency2 = latency;
-
-        latency = -10000000L;
 
         packetSender.sendPacket(0, node_connector_id, node_id);
         while (latency.equals(-10000000L)) {
             //waiting
             System.out.print("");
         }
-        Long latency2 = latency - controllerLatency2;
+        Long latency2 = latency;
 
         //jitter is an absolute value
         Long jitter = Math.abs(latency2 - latency1);
 
+            averageJitter += jitter;
 
-        return jitter;
+        }
+
+        averageJitter = averageJitter / NUMBER_OF_PACKETS;
+
+        return averageJitter / 1000 ;
 
 
     }

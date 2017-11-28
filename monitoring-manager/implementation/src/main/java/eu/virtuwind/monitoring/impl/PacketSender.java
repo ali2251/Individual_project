@@ -98,9 +98,18 @@ public class PacketSender {
             actions.add(outputNodeConnectorAction);
            // actions.add(actionBuilder.build());
 
+        byte[] packetPayload = {
+                0x01, 0x23, 0x45, 0x67, (byte) 0x89, (byte) 0xab,
+                (byte) 0xcd, (byte) 0xef, 0x01, 0x23, 0x45, 0x67,
+                0x08, 0x00,
+                0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11,
+                (byte)0x98, (byte)0xfe, (byte)0xdc, (byte)0xba
+        };
 
 
-            TransmitPacketInput packet = new TransmitPacketInputBuilder()
+
+
+        TransmitPacketInput packet = new TransmitPacketInputBuilder()
                     .setEgress(nEgressConfRef)
                     .setNode(ref)
                     .setPayload(lldpFrame)

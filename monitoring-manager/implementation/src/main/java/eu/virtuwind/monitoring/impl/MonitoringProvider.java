@@ -48,7 +48,7 @@ public class MonitoringProvider implements BindingAwareProvider, AutoCloseable {
         LOG.info("Resource Monitor loaded up");
 
 
-        PacketProcessing packetProcessing = new PacketProcessing();
+        PacketProcessing packetProcessing = new PacketProcessing(notificationService);
         notificationService.registerNotificationListener(packetProcessing);
 
 

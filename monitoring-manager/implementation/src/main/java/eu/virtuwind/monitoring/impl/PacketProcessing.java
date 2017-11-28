@@ -29,23 +29,28 @@ public class PacketProcessing implements PacketProcessingListener {
     private NotificationProviderService notificationProviderService;
 
 
-    public PacketProcessing() {
+    public PacketProcessing(NotificationProviderService nps) {
         LOG.info("PacketProcessing loaded successfully");
         dstMacs = new LinkedList<>();
+        notificationProviderService = nps;
     }
 
 
     @Override
     public void onPacketReceived(final PacketReceived packetReceived) {
 
-        LatencyPacket latencyPacket = new LatencyPacketBuilder().setLatency(BigInteger.TEN).build();
 
-        notificationProviderService.publish(latencyPacket);
 
 
         new Thread(new Runnable() {
             @Override
             public void run() {
+
+                LatencyPacket latencyPacket = new LatencyPacketBuilder().setLatency(BigInteger.TEN).build();
+
+                notificationProviderService.publish(latencyPacket);
+
+
 
                 byte[] payload = packetReceived.getPayload();
 
