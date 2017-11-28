@@ -64,6 +64,7 @@ public class LatencyMonitor {
         System.out.println("controller latency is " + controllerLatency);
 
 
+        latency = -10000000L;
         packetSender.sendPacket(0, node_connector_id, node_id);
 
         while (latency.equals(-10000000L)) {
@@ -79,7 +80,6 @@ public class LatencyMonitor {
 
         System.out.println("latency then is " + latencyToreturn);
 
-        if (latencyToreturn < 0 )latencyToreturn = 0L;
 
         return latencyToreturn;
 
@@ -107,7 +107,7 @@ public class LatencyMonitor {
 
         Long controllerLatency = latency;
 
-
+        latency = -10000000L;
         packetSender.sendPacket(0, node_connector_id, node_id);
         while (latency.equals(-10000000L)) {
             //waiting
@@ -133,6 +133,7 @@ public class LatencyMonitor {
 
         Long controllerLatency2 = latency;
 
+        latency = -10000000L;
 
         packetSender.sendPacket(0, node_connector_id, node_id);
         while (latency.equals(-10000000L)) {
