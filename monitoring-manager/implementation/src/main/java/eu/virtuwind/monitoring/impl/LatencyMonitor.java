@@ -2,6 +2,7 @@ package eu.virtuwind.monitoring.impl;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
+import org.eclipse.xtend.lib.macro.services.SourceTypeLookup;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -13,13 +14,14 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yang.gen.v1.urn.eu.virtuwind.monitoring.rev150722.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 
-public class LatencyMonitor {
+public class LatencyMonitor implements MonitoringListener {
 
     private static DataBroker db;
 
@@ -31,11 +33,22 @@ public class LatencyMonitor {
     private static PacketProcessingService packetProcessingService;
     private static PacketSender packetSender;
 
-    public LatencyMonitor(DataBroker dataBroker, PacketSender packetSender1) {
+    public LatencyMonitor(DataBroker dataBroker, PacketSender packetSender1)  {
         db = dataBroker;
         packetSender = packetSender1;
     }
+    public LatencyMonitor() {}
 
+
+    public void onTopologyChanged(TopologyChanged notification) {
+
+    }
+
+    public void onLatencyPacket(LatencyPacket notification){
+
+        System.out.println("Reched here");
+        System.out.println(notification.getLatency());
+    }
 
 
     public Long MeasureNextLink(Link link) {

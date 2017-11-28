@@ -42,4 +42,12 @@ module monitoring {
             type string;
           }
     }  // notification topologyChanged
+
+
+
+    notification latencyPacket {
+        leaf latency {
+            type uint64;
+        }
+    }
 }

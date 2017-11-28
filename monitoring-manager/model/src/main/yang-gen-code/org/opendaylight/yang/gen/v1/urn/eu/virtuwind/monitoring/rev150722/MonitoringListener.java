@@ -14,6 +14,11 @@ import org.opendaylight.yangtools.yang.binding.NotificationListener;
  *         type string;
  *     }
  * }
+ * notification latencyPacket {
+ *     leaf latency {
+ *         type uint64;
+ *     }
+ * }
  * </pre>
  *
  */
@@ -26,6 +31,8 @@ public interface MonitoringListener
 
 
     void onTopologyChanged(TopologyChanged notification);
+    
+    void onLatencyPacket(LatencyPacket notification);
 
 }
 

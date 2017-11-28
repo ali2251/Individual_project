@@ -9,7 +9,7 @@ from mininet.link import TCLink, Intf
 
 def MyNetwork():
  print("Starting")
- net = Mininet(controller=Controller, switch=OVSSwitch)
+ net = Mininet(controller=Controller, switch=OVSKernelSwitch)
  c1 = RemoteController("c1", ip='127.0.0.1', port=6653)
  #hosts
  h1 = net.addHost('h1', ip='10.0.1.1/24', defaultRoute='via 10.0.1.4', mac='00:00:00:00:01:01')

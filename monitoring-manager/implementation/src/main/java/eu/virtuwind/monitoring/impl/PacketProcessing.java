@@ -3,13 +3,17 @@ package eu.virtuwind.monitoring.impl;
 
 import  eu.virtuwind.monitoring.impl.external.*;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
+import org.opendaylight.yang.gen.v1.urn.eu.virtuwind.monitoring.impl.rev150722.modules.module.configuration.monitoring.impl.NotificationService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.opendaylight.yang.gen.v1.urn.eu.virtuwind.monitoring.rev150722.*;
 
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,6 +26,7 @@ public class PacketProcessing implements PacketProcessingListener {
     private DataBroker dataBroker;
     private PacketProcessingService packetProcessingService;
     private List<String> dstMacs;
+    private NotificationProviderService notificationProviderService;
 
 
     public PacketProcessing() {
@@ -32,6 +37,11 @@ public class PacketProcessing implements PacketProcessingListener {
 
     @Override
     public void onPacketReceived(final PacketReceived packetReceived) {
+
+        LatencyPacket latencyPacket = new LatencyPacketBuilder().setLatency(BigInteger.TEN).build();
+
+        notificationProviderService.publish(latencyPacket);
+
 
         new Thread(new Runnable() {
             @Override

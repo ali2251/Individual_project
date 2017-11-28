@@ -42,6 +42,7 @@ public class MonitoringProvider implements BindingAwareProvider, AutoCloseable {
         this.notificationService = notificationService1;
         this.rpcProviderRegistry = rpcProviderRegistry;
 
+
         PacketProcessingService packetProcessingService = rpcProviderRegistry.getRpcService(PacketProcessingService.class);
         System.out.println("Resource Monitor Loaded Up");
         LOG.info("Resource Monitor loaded up");
@@ -60,6 +61,8 @@ public class MonitoringProvider implements BindingAwareProvider, AutoCloseable {
 
         serviceRegistration = rpcProviderRegistry.
                 addRpcImplementation(MonitoringService.class, new ResourceMonitor(dataBroker, latencyMonitor));
+
+        notificationService.registerNotificationListener(latencyMonitor);
 
 
         final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
