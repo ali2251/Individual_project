@@ -20,6 +20,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Link;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
+import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.opendaylight.yang.gen.v1.urn.eu.virtuwind.monitoring.rev150722.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
+
+import java.util.HashMap;
 import java.util.concurrent.Future;
 
 import java.math.BigInteger;
@@ -49,11 +52,10 @@ public class ResourceMonitor implements MonitoringService {
 
     private static ResourceMonitor resourceMonitor;
 
-    private static  LatencyMonitor latencyMonitor;
+    private static LatencyMonitor latencyMonitor;
 
     public static final Integer NUM_OF_QUEUES = 4;
     public static final Long QUEUE_SIZE = 30000L; //in bytes
-
 
 
     public ResourceMonitor(DataBroker db, LatencyMonitor latencyMonitor1) {
@@ -61,8 +63,6 @@ public class ResourceMonitor implements MonitoringService {
         latencyMonitor = latencyMonitor1;
         resourceMonitor = this;
     }
-
-
 
 
     public static ResourceMonitor getInstance() {
@@ -135,6 +135,9 @@ public class ResourceMonitor implements MonitoringService {
 
         try {
 
+            HashMap<NodeConnector, Link> linksToNodeconnectorMap = new HashMap<NodeConnector, Link>();
+            List<NodeConnector> nodeConnectorList = new ArrayList<>();
+
             List<ResMonitorLink> linksToReturn = new ArrayList<>();
 
             List<Link> links = getAllLinks(dataBroker);
@@ -144,7 +147,7 @@ public class ResourceMonitor implements MonitoringService {
             if (links != null) {
 
                 LOG.info("Link size is " + links.size());
-              //  System.out.println("size of links----->" + links.size());
+                //  System.out.println("size of links----->" + links.size());
                 for (Link link : links) {
                     String nodeToFind = link.getSource().getSourceNode().getValue();
                     String outputNodeConnector = link.getSource().getSourceTp().getValue();
@@ -160,37 +163,8 @@ public class ResourceMonitor implements MonitoringService {
 
                                 if (nc.getId().getValue().equals(outputNodeConnector)) {
 
-
-                                    FlowCapableNodeConnectorStatisticsData statData = nc
-                                            .getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
-                                    org.opendaylight.yang.gen.v1.urn.opendaylight.port.statistics.rev131214.flow.capable.node.connector.statistics.FlowCapableNodeConnectorStatistics statistics = statData
-                                            .getFlowCapableNodeConnectorStatistics();
-                                    BigInteger packetsTransmitted = BigInteger.ZERO;
-                                    BigInteger packetErrorsTransmitted = BigInteger.ZERO;
-                                    if(statistics != null && statistics.getPackets() != null) {
-                                        packetsTransmitted = statistics.getPackets().getTransmitted();
-                                        packetErrorsTransmitted = statistics.getTransmitErrors();
-
-                                    }
-                                   Float packetLoss = (packetsTransmitted.floatValue() == 0) ? 0
-                                            : packetErrorsTransmitted.floatValue()
-                                            / packetsTransmitted.floatValue();
-
-
-                                    //BigInteger totalbytes = statistics.getBytes().getTransmitted();
-
-                                   // Thread.sleep(10000);
-
-                                   // BigInteger totalbytesNow = statistics.getBytes().getTransmitted();
-
-
-
-                                    BigInteger throughput = BigInteger.ZERO; //(totalbytesNow.subtract(totalbytes)).divide(new BigInteger("10")) ;
-
-                                    //This is the one
-                                    FlowCapableNodeConnector fcnc = nc.getAugmentation(FlowCapableNodeConnector.class);
-// for now setting only bandwidth and leaving the other qos empty, but the rest should also be implemented, at least packetDelay!!!
-                                    linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), -1L, -1L, throughput.longValue() ,link));
+                                    linksToNodeconnectorMap.put(nc, link);
+                                    nodeConnectorList.add(nc);
 
 
                                 }
@@ -200,19 +174,65 @@ public class ResourceMonitor implements MonitoringService {
                         }
                     }
 
-                    if(!(link.getLinkId().getValue().contains("host") )) {
-                        synchronized (this) {
+
+                }
+
+                nodeConnectorList.parallelStream().forEach((nc) -> {
+
+                    FlowCapableNodeConnectorStatisticsData statData = nc
+                            .getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
+                    org.opendaylight.yang.gen.v1.urn.opendaylight.port.statistics.rev131214.flow.capable.node.connector.statistics.FlowCapableNodeConnectorStatistics statistics = statData
+                            .getFlowCapableNodeConnectorStatistics();
+                    BigInteger packetsTransmitted = BigInteger.ZERO;
+                    BigInteger packetErrorsTransmitted = BigInteger.ZERO;
+                    if (statistics != null && statistics.getPackets() != null) {
+                        packetsTransmitted = statistics.getPackets().getTransmitted();
+                        packetErrorsTransmitted = statistics.getTransmitErrors();
+
+                    }
+                    Float packetLoss = (packetsTransmitted.floatValue() == 0) ? 0
+                            : packetErrorsTransmitted.floatValue()
+                            / packetsTransmitted.floatValue();
+
+
+                    BigInteger totalbytes = statistics.getBytes().getTransmitted();
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    BigInteger totalbytesNow = statistics.getBytes().getTransmitted();
+
+
+                    BigInteger throughput = totalbytesNow.subtract(totalbytes);
+
+                    //This is the one
+                    FlowCapableNodeConnector fcnc = nc.getAugmentation(FlowCapableNodeConnector.class);
+// for now setting only bandwidth and leaving the other qos empty, but the rest should also be implemented, at least packetDelay!!!
+
+                    Link link =  linksToNodeconnectorMap.get(nc);
+
+                    if (!(link.getLinkId().getValue().contains("host"))) {
+
 
                             Long latency = latencyMonitor.MeasureNextLink(link);
                             Long jitter = latencyMonitor.MeasureNextLinkJitter(link);
-                            linksToReturn.get(linksToReturn.size()-1).setPacketDelay(latency);
-                            linksToReturn.get(linksToReturn.size()-1).setJitter(jitter);
 
-                        }
+                        linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), latency, jitter, throughput.longValue(), link);
+
+
+                    } else {
+                        linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), -1L, -1L, throughput.longValue(), link);
+
                     }
 
 
-                }
+
+                });
+                
+
                 return linksToReturn;
             } else {
                 return null;
