@@ -144,6 +144,13 @@ public class ResourceMonitor implements MonitoringService {
 
             List<org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node> nodeList = getNodes(dataBroker);
 
+
+            HashMap<NodeConnector, BigInteger> throughputHashMap = new HashMap<NodeConnector, BigInteger>();
+
+            List<BigInteger> list1 = new ArrayList<>();
+            List<BigInteger> list2 = new ArrayList<>();
+
+
             if (links != null) {
 
                 LOG.info("Link size is " + links.size());
@@ -167,6 +174,15 @@ public class ResourceMonitor implements MonitoringService {
                                     nodeConnectorList.add(nc);
 
 
+                                    FlowCapableNodeConnectorStatisticsData statData = nc
+                                            .getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
+                                    org.opendaylight.yang.gen.v1.urn.opendaylight.port.statistics.rev131214.flow.capable.node.connector.statistics.FlowCapableNodeConnectorStatistics statistics = statData
+                                            .getFlowCapableNodeConnectorStatistics();
+
+                                    System.out.println("stats are BEFORE sleep " + statistics.getBytes().getTransmitted().toString());
+
+                                    list1.add(statistics.getBytes().getTransmitted());
+
                                 }
 
                             }
@@ -177,9 +193,50 @@ public class ResourceMonitor implements MonitoringService {
 
                 }
 
-                nodeConnectorList.parallelStream().forEach((nc) -> {
 
-                    FlowCapableNodeConnectorStatisticsData statData = nc
+                Thread.sleep(1_000);
+
+                List<org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node> nodeListLocal = getNodes(dataBroker);
+
+
+                for (Link link : links) {
+                    String nodeToFind = link.getSource().getSourceNode().getValue();
+                    String outputNodeConnector = link.getSource().getSourceTp().getValue();
+
+                    for (org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node node : nodeListLocal) {
+
+
+                        if (node.getId().getValue().equals(nodeToFind)) {
+
+                            List<NodeConnector> nodeConnectors = node.getNodeConnector();
+
+                            for (NodeConnector nc : nodeConnectors) {
+
+                                if (nc.getId().getValue().equals(outputNodeConnector)) {
+
+
+                                    FlowCapableNodeConnectorStatisticsData statData = nc
+                                            .getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
+                                    org.opendaylight.yang.gen.v1.urn.opendaylight.port.statistics.rev131214.flow.capable.node.connector.statistics.FlowCapableNodeConnectorStatistics statistics = statData
+                                            .getFlowCapableNodeConnectorStatistics();
+
+                                    System.out.println("stats are afetr sleep " + statistics.getBytes().getTransmitted().toString());
+                                    list2.add(statistics.getBytes().getTransmitted());
+
+                                }
+
+                            }
+
+                        }
+                    }
+
+                }
+
+
+                for (int i = 0; i < list1.size(); ++i) {
+
+
+                    FlowCapableNodeConnectorStatisticsData statData = nodeConnectorList.get(i)
                             .getAugmentation(FlowCapableNodeConnectorStatisticsData.class);
                     org.opendaylight.yang.gen.v1.urn.opendaylight.port.statistics.rev131214.flow.capable.node.connector.statistics.FlowCapableNodeConnectorStatistics statistics = statData
                             .getFlowCapableNodeConnectorStatistics();
@@ -194,44 +251,39 @@ public class ResourceMonitor implements MonitoringService {
                             : packetErrorsTransmitted.floatValue()
                             / packetsTransmitted.floatValue();
 
+                    BigInteger throughput = BigInteger.ZERO;
 
-                    BigInteger totalbytes = statistics.getBytes().getTransmitted();
+                    System.out.println("subt as fllows " + list2.get(i) +"   -  " + list1.get(i) );
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    throughput = list2.get(i).subtract(list1.get(i));
 
-                    BigInteger totalbytesNow = statistics.getBytes().getTransmitted();
+                    //throughput = throughput.divide(BigInteger.TEN);
+
+                    System.out.println("throughput " + throughput);
 
 
-                    BigInteger throughput = totalbytesNow.subtract(totalbytes);
+                    FlowCapableNodeConnector fcnc = nodeConnectorList.get(i).getAugmentation(FlowCapableNodeConnector.class);
 
-                    //This is the one
-                    FlowCapableNodeConnector fcnc = nc.getAugmentation(FlowCapableNodeConnector.class);
-// for now setting only bandwidth and leaving the other qos empty, but the rest should also be implemented, at least packetDelay!!!
 
-                    Link link =  linksToNodeconnectorMap.get(nc);
+                    Link link = linksToNodeconnectorMap.get(nodeConnectorList.get(i));
 
                     if (!(link.getLinkId().getValue().contains("host"))) {
 
 
-                            Long latency = latencyMonitor.MeasureNextLink(link);
-                            Long jitter = latencyMonitor.MeasureNextLinkJitter(link);
+                          Long latency = latencyMonitor.MeasureNextLink(link);
+                          Long jitter = latencyMonitor.MeasureNextLinkJitter(link);
 
-                        linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), latency, jitter, throughput.longValue(), link);
+                        linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), latency, jitter, throughput.longValue(), link));
 
 
                     } else {
-                        linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), -1L, -1L, throughput.longValue(), link);
+                        linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), -1L, -1L, throughput.longValue(), link));
 
                     }
 
 
+                }
 
-                });
-                
 
                 return linksToReturn;
             } else {

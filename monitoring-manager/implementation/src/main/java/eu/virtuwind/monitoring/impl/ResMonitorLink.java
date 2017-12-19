@@ -88,6 +88,7 @@ public class ResMonitorLink {
                 ", packetLoss=" + packetLoss +
                 ", packetDelay=" + packetDelay +
                 ", jitter=" + jitter +
+                ", throughput=" + throughput +
                 '}';
     }
 }
