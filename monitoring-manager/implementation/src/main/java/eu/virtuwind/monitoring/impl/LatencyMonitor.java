@@ -16,9 +16,11 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yang.gen.v1.urn.eu.virtuwind.monitoring.rev150722.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.*;
 
 
 public class LatencyMonitor implements MonitoringListener {
@@ -49,7 +51,7 @@ public class LatencyMonitor implements MonitoringListener {
 
     public void onLatencyPacket(LatencyPacket notification) {
 
-       // System.out.println("Reched here");
+        // System.out.println("Reched here");
         //System.out.println(notification.getLatency());
     }
 
@@ -63,28 +65,63 @@ public class LatencyMonitor implements MonitoringListener {
         String node_connector_id = link.getSource().getSourceTp().getValue();
 
 
+        // for (int i = 0; i < NUMBER_OF_PACKETS; i++) {
 
+        latency = -10000000L;
 
-        for (int i = 0; i < NUMBER_OF_PACKETS; i++) {
+        final Duration timeout = Duration.ofMillis(3000);
 
-            latency = -10000000L;
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-            packetSender.sendPacket(0, node_connector_id, node_id);
+        Callable<Long> call = new Callable<Long>() {
+            @Override
+            public Long call() throws Exception {
+                packetSender.sendPacket(0, node_connector_id, node_id);
 
-            while (latency.equals(-10000000L)) {
-                //waiting
-                System.out.print("");
+                while (latency.equals(-10000000L)) {
+                    //waiting
+                    System.out.print("");
+
+                }
+                return latency;
 
             }
+        };
 
-            averageLatency += latency;
+        Long delay = 0L;
+
+        for (int i = 0; i < 3 ; i++) {
+            System.out.println("start of for loop");
+
+            if (delay != 0) {
+                break;
+            }
+            Future<Long> f = executorService.submit(call);
+
+            try {
+                delay = f.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+                System.out.println("integer is... " + delay);
+
+            } catch (TimeoutException t) {
+                System.out.println("exception occured time");
+
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+
+            System.out.println("end of for loop");
 
         }
 
 
 
 
-        Long latencyToreturn = averageLatency / NUMBER_OF_PACKETS;
+        // averageLatency += latency;
+
+        //}
+
+
+        Long latencyToreturn =  delay; //averageLatency / NUMBER_OF_PACKETS;
 
 
         return latencyToreturn / 1000;
@@ -102,31 +139,30 @@ public class LatencyMonitor implements MonitoringListener {
         String node_connector_id = link.getSource().getSourceTp().getValue();
 
 
-        for (int i = 0; i < NUMBER_OF_PACKETS ; i++) {
+        for (int i = 0; i < NUMBER_OF_PACKETS; i++) {
 
 
+            packetSender.sendPacket(0, node_connector_id, node_id);
+            while (latency.equals(-10000000L)) {
+                //waiting
+                System.out.print("");
 
-        packetSender.sendPacket(0, node_connector_id, node_id);
-        while (latency.equals(-10000000L)) {
-            //waiting
-            System.out.print("");
+            }
+            //latency is now not -1
+            Long latency1 = latency;
 
-        }
-        //latency is now not -1
-        Long latency1 = latency;
-
-        latency = -10000000L;
+            latency = -10000000L;
 
 
-        packetSender.sendPacket(0, node_connector_id, node_id);
-        while (latency.equals(-10000000L)) {
-            //waiting
-            System.out.print("");
-        }
-        Long latency2 = latency;
+            packetSender.sendPacket(0, node_connector_id, node_id);
+            while (latency.equals(-10000000L)) {
+                //waiting
+                System.out.print("");
+            }
+            Long latency2 = latency;
 
-        //jitter is an absolute value
-        Long jitter = Math.abs(latency2 - latency1);
+            //jitter is an absolute value
+            Long jitter = Math.abs(latency2 - latency1);
 
             averageJitter += jitter;
 
@@ -134,7 +170,7 @@ public class LatencyMonitor implements MonitoringListener {
 
         averageJitter = averageJitter / NUMBER_OF_PACKETS;
 
-        return averageJitter / 1000 ;
+        return averageJitter / 1000;
 
 
     }
