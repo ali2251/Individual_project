@@ -56,10 +56,8 @@ public class LatencyMonitor implements MonitoringListener {
     }
 
 
-    public Long MeasureNextLink(Link link) {
+    public LatencyJitterWrapper MeasureNextLink(Link link) {
 
-
-        Long averageLatency = 0L;
 
         String node_id = link.getSource().getSourceNode().getValue();
         String node_connector_id = link.getSource().getSourceTp().getValue();
@@ -69,7 +67,9 @@ public class LatencyMonitor implements MonitoringListener {
 
         latency = -10000000L;
 
-        final Duration timeout = Duration.ofMillis(3000);
+        final Duration timeout = Duration.ofMillis(30);
+
+        final Integer N = 100;
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -88,43 +88,103 @@ public class LatencyMonitor implements MonitoringListener {
             }
         };
 
-        Long delay = 0L;
+        Long delay = 9999999L;
 
-        for (int i = 0; i < 3 ; i++) {
-            System.out.println("start of for loop");
+        List<Long> latencies = new ArrayList<>();
 
-            if (delay != 0) {
+        Integer breakCounter = 0;
+
+        for (int j = 0; j < N; j++) {
+
+            delay = 9999999L;
+
+            if (breakCounter > 1) {
+                latencies.add(9999999L);
                 break;
             }
-            Future<Long> f = executorService.submit(call);
 
-            try {
-                delay = f.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
-                System.out.println("integer is... " + delay);
+            for (int i = 0; i < 3; i++) {
+                System.out.println("start of for loop");
 
-            } catch (TimeoutException t) {
-                System.out.println("exception occured time");
+                if (delay != 9999999L) {
+                    break;
+                }
+                Future<Long> f = executorService.submit(call);
 
-            } catch (Exception e1) {
-                e1.printStackTrace();
+                try {
+
+                    delay = f.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+                    System.out.println("integer is... " + delay);
+                    latencies.add(delay);
+                    breakCounter = 0;
+
+                } catch (TimeoutException t) {
+                    ++breakCounter;
+                    System.out.println("exception occured time");
+                    f.cancel(true);
+
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+
+                System.out.println("end of for loop");
+
             }
 
-            System.out.println("end of for loop");
+        }
+
+        executorService.shutdownNow();
+
+
+        System.out.println("exited for loop");
+
+        System.out.println("list is " + latencies);
+
+        Long latencyToreturn = 9999999L;
+        Long jitter = 9999999L;
+
+        if (latencies.contains(9999999L)) {
+            //not reloable latency
+            System.out.println("latency contains default value.........-");
+
+        } else {
+
+
+            Double average = latencies.stream().mapToLong(val -> val).average().getAsDouble();
+
+            latencyToreturn = average.longValue();
+
+
+            Long sum = 0L;
+            for (Long l : latencies) {
+                Long absolute =  Math.abs(l - latencyToreturn);
+                Long square = absolute * absolute;
+                sum  += square;
+            }
+
+            Long daviation  = sum / N;
+
+            Double standardDaviation = Math.sqrt(daviation);
+
+            jitter = standardDaviation.longValue();
+
+
+            System.out.println("returning average latency " + latencyToreturn);
 
         }
 
 
 
-
+        return new LatencyJitterWrapper(latencyToreturn, jitter);
         // averageLatency += latency;
 
         //}
 
 
-        Long latencyToreturn =  delay; //averageLatency / NUMBER_OF_PACKETS;
+        //Long latencyToreturn = delay; //averageLatency / NUMBER_OF_PACKETS;
 
 
-        return latencyToreturn / 1000;
+        //return latencyToreturn / 1000;
 
 
     }

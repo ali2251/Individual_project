@@ -270,8 +270,9 @@ public class ResourceMonitor implements MonitoringService {
                     if (!(link.getLinkId().getValue().contains("host"))) {
 
 
-                          Long latency = latencyMonitor.MeasureNextLink(link);
-                          Long jitter = latencyMonitor.MeasureNextLinkJitter(link);
+                         LatencyJitterWrapper latencyJitterWrapper = latencyMonitor.MeasureNextLink(link);
+                          Long latency = latencyJitterWrapper.getLatency();
+                          Long jitter = latencyJitterWrapper.getJitter();
 
                         linksToReturn.add(new ResMonitorLink(fcnc.getCurrentSpeed(), packetLoss.longValue(), latency, jitter, throughput.longValue(), link));
 
