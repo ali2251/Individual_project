@@ -33,6 +33,7 @@
     "mongoose": "^4.13.10",
     "morgan": "~1.7.0",
     "newrelic": "^1.38.1",
+    "node-cron": "^1.2.1",
     "node-jsx": "^0.13.3",
     "node-session": "^1.2.1",
     "nodemailer": "^3.1.3",
