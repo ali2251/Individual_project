@@ -26,7 +26,7 @@ function session(req, res, next){
 
 
 //db connection
-//mongoose.connect('mongodb://localhost/test');
+mongoose.connect('mongodb://localhost/test6');
 
 //configs
 //require('./config/passport')(passport);
