@@ -30,4 +30,8 @@ var User = require('../controllers/User.Controller');
 
 routes.get('/test', User.test);
 
+routes.get('/getAllLinks', User.getAllLinks)
+
+routes.get('/getLinkFromId', User.getLinkFromId)
+
 module.exports = routes;
