@@ -1,7 +1,7 @@
 'use strict';
 
 var passport = require('passport');
-var User = require('../models/User');
+var Link = require('../models/Link');
 var request = require('request');
 
 var LocalStrategy = require('passport-local').Strategy;
@@ -17,20 +17,8 @@ var bcrypt = require('bcrypt-nodejs');
 var async = require('async');
 var crypto = require('crypto');
 var bcryptjs = require('bcryptjs');
-var CLIENT_ID = 'ca_A2UbhVCJorclCcITmqkEow28k4pUivW7';
-var API_KEY = 'sk_test_r4gnv7aGaGJKrhgCFezDGLrL'; // must never leave the backend
-var PUBLISHABLE_KEY = ' pk_test_T7A8OFhzKHJO0badDnTI0p6Y'; // used for card tokenization
 
-var stripe = require('stripe')(API_KEY);
 
-// const S3_BUCKET = 'imagesuploadjs' //= process.env.S3_BUCKET;
-//
-// const s3 = new aws.S3({
-//     sslEnabled: true,
-//     accessKeyId: "AKIAINT4DVSPUNN7MQOA",
-//     secretAccessKey: "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"
-//
-// });
 
 /**
  * @api {post} /user/signup Signs up Employer or Employee
@@ -45,7 +33,7 @@ var stripe = require('stripe')(API_KEY);
  * @apiParam {Date} dob Amount to be charged
  * @apiParam {String} location Location of User
  * @apiParam {String} phoneNumber Phone Number
- * 
+ *
  * @apiParam {String} summary Summary of Employee (Only for Employee)
  * @apiParam {String} skillLevel Beginner or Experienced (Only for Employee)
  * @apiParam {Integer} experience Experience of Employee (Only for Employee)
@@ -57,10 +45,29 @@ var stripe = require('stripe')(API_KEY);
 
 exports.test = function (req, res) {
   res.status(200).send("Thanks! ")
-
-
 };
 
+exports.getLinkFromId = function (req, res) {
+     if (req.body) {
+         Link.findOne({
+             id: req.body.id }).then(function(result) {
+                return res.status(200).send({success: true, Link: result});
+             });
+
+          }
+
+}
+
+
+exports.getAllLinks = function (req, res) {
+     if (req.body) {
+         Link.find().then(function(result) {
+                return res.status(200).send({success: true, Links: result});
+             });
+
+          }
+
+}
 
 // exports.signup = function (req, res) {
 //     var newUser;
@@ -828,4 +835,3 @@ exports.test = function (req, res) {
 //
 // }
 //
-

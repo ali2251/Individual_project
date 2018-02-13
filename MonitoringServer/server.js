@@ -26,10 +26,10 @@ function session(req, res, next){
 
 
 //db connection
-mongoose.connect('mongodb://localhost/mlb');
+//mongoose.connect('mongodb://localhost/test');
 
 //configs
-require('./config/passport')(passport);
+//require('./config/passport')(passport);
 
 //middleware
 app.use(expressSession({secret: 'mlb'}));
@@ -70,4 +70,4 @@ app.use(function(err, req, res, next) {
 
 
 app.listen(port);
-console.log("server running on port "+port)
+console.log("server running on port: "+port)
