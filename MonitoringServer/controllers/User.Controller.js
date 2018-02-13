@@ -50,7 +50,7 @@ exports.test = function (req, res) {
 exports.getLinkFromId = function (req, res) {
      if (req.body) {
          Link.findOne({
-             id: req.body.id }).then(function(result) {
+             id: req.param.id }).then(function(result) {
                 return res.status(200).send({success: true, Link: result});
              });
 
