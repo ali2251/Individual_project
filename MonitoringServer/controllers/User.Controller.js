@@ -1,22 +1,22 @@
 'use strict';
 
-var passport = require('passport');
+//var passport = require('passport');
 var Link = require('../models/Link');
 var request = require('request');
 
-var LocalStrategy = require('passport-local').Strategy;
-var jwt = require('jwt-simple');
-var aws = require('aws-sdk');
+//var LocalStrategy = require('passport-local').Strategy;
+//var jwt = require('jwt-simple');
+//var aws = require('aws-sdk');
 var busboy = require('connect-busboy');
 var http = require('http');
 var xmlHTTP = require('xhr2');
 var fs = require('fs');
 var path = require('path');
 var nodemailer = require('nodemailer');
-var bcrypt = require('bcrypt-nodejs');
+//var bcrypt = require('bcrypt-nodejs');
 var async = require('async');
 var crypto = require('crypto');
-var bcryptjs = require('bcryptjs');
+//var bcryptjs = require('bcryptjs');
 
 
 
