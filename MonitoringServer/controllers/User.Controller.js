@@ -49,9 +49,10 @@ exports.test = function (req, res) {
 
 exports.getLinkFromId = function (req, res) {
      if (req.body) {
-       console.log("req", req.params);
-         Link.findOne({
-             id: req.params.id }).then(function(result) {
+       console.log("req params", req.params);
+       console.log("req query",req.query);
+          Link.findOne({
+             id: req.query.id }).then(function(result) {
                 return res.status(200).send({success: true, Link: result});
              });
 
