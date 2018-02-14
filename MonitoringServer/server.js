@@ -15,6 +15,19 @@ var routes = require('./routes');
 var http = require('http').Server(app);
 var busboy = require('connect-busboy');
 var NodeSession = require('node-session');
+var fs = require('fs');
+
+var key = fs.readFileSync('certificates/domain.key');
+var cert = fs.readFileSync( 'certificates/domain.crt' );
+var https = require('https');
+
+//var ca = fs.readFileSync( 'certificates/intermediate.crt' );
+
+var options = {
+  key: key,
+  cert: cert,
+  ca: cert
+};
 
 var nodeSession = new NodeSession({secret: 'Q3UBzdH9GEfiRCTKbi5MTPyChpzXLsTD'});
 
@@ -69,5 +82,6 @@ app.use(function(err, req, res, next) {
 });
 
 
-app.listen(port);
+//app.listen(port);
+https.createServer(options, app).listen(3000);
 console.log("server running on port: "+port)
