@@ -43,6 +43,8 @@ public class MonitoringProvider implements BindingAwareProvider, AutoCloseable {
         this.rpcProviderRegistry = rpcProviderRegistry;
 
 
+        SwitchConfigurator switchConfigurator = new SwitchConfigurator(salFlowService);
+
         PacketProcessingService packetProcessingService = rpcProviderRegistry.getRpcService(PacketProcessingService.class);
         System.out.println("Resource Monitor Loaded Up");
         LOG.info("Resource Monitor loaded up");

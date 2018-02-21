@@ -23,6 +23,16 @@ module monitoring {
             }
         }
 
+     rpc install-flow{
+
+        output {
+            leaf success {
+                type string;
+            }
+        }
+
+     }
+
 
     notification topologyChanged {
           leaf topologyChange {
