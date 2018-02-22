@@ -74,9 +74,18 @@ public class MonitoringProvider implements BindingAwareProvider, AutoCloseable {
                 System.out.println("meow");
                 LOG.info("Meow");
 
-                System.out.println( resourceMonitor.getAllLinksWithQos());
+                SwitchConfigurator.getInstance().getTimes();
 
-                System.out.println("done with test");
+                try {
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                SwitchConfigurator.getInstance().removeFlows();
+
+
+                System.out.println("done with test" );
 
                 //packetSender.sendPacket(new MacAddress("ae:bd:c7:94:15:ef"), new MacAddress("82:fe:07:dc:cb:cb"));
             }

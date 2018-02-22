@@ -1,7 +1,15 @@
 package eu.virtuwind.monitoring.impl;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -69,6 +77,10 @@ public class SwitchConfigurator {
 
     private static SwitchConfigurator switchConfigurator;
 
+    private static long id = 0;
+
+    private static List<Flow> flows = new ArrayList<>();
+
     public SwitchConfigurator(SalFlowService salFlowService) {
         this.salFlowService = salFlowService;
         switchConfigurator = this;
@@ -80,12 +92,134 @@ public class SwitchConfigurator {
 
     private AtomicLong flowCookieInc = new AtomicLong(0x2a00000000000000L);
 
+
+    private RemoveFlowInput getRemoveFlowInput(Flow flowtoDelete) {
+
+
+        //identify the flow
+        InstanceIdentifier<Flow> flowPath = InstanceIdentifier
+                .builder(Nodes.class)
+                .child(Node.class, new NodeKey(new NodeId("openflow:1")))
+                .augmentation(FlowCapableNode.class)
+                .child(Table.class, new TableKey(flowtoDelete.getTableId()))
+                .child(Flow.class, new FlowKey(flowtoDelete.getId())).build();
+
+
+        RemoveFlowInputBuilder b = new RemoveFlowInputBuilder(flowtoDelete);
+        InstanceIdentifier<Table> tableInstanceId = flowPath
+                .<Table>firstIdentifierOf(Table.class);
+        InstanceIdentifier<Node> nodeInstanceId = flowPath
+                .<Node>firstIdentifierOf(Node.class);
+        b.setNode(new NodeRef(nodeInstanceId));
+        b.setFlowTable(new FlowTableRef(tableInstanceId));
+        b.setTransactionUri(new Uri(flowtoDelete.getId().getValue()));
+
+        //the flow to remove
+        return b.build();
+    }
+
+
+    public boolean removeFlows() {
+
+        List<Long> list1 = new ArrayList<>();
+
+        Integer max = flows.size();
+        long[] list = new long[max];
+        Long sum = 0L;
+
+        try {
+
+            BufferedWriter out = new BufferedWriter(new FileWriter("del-latency" + max + ".txt"));
+
+            for (int i = 0; i < flows.size(); ++i) {
+
+                Flow flow = flows.get(i);
+
+                long beforeTime = System.currentTimeMillis();
+                RemoveFlowInput removeFlowInput = getRemoveFlowInput(flow);
+                Future<RpcResult<RemoveFlowOutput>> future = salFlowService.removeFlow(removeFlowInput);
+                if(future.get().isSuccessful() || future.get().getErrors().size() == 0) {
+                    long afterTime = System.currentTimeMillis();
+                    long totalTime = afterTime - beforeTime;
+                    list[i] = totalTime;
+                    list1.add(totalTime);
+                    sum += totalTime;
+                }
+
+
+            }
+
+
+            System.out.println(list1);
+            System.out.println("sum is: " + sum);
+            System.out.println("max is: " + max);
+
+            for (int i = 0; i < max; ++i) {
+                out.write(list[i] + "\n");
+            }
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+
+
+    }
+
+
+    public void getTimes() {
+
+        List<Long> list1 = new ArrayList<>();
+
+        Integer max = 100;
+        long[] list = new long[max];
+        Long sum = 0L;
+
+
+        try {
+
+            BufferedWriter out = new BufferedWriter(new FileWriter("latency" + max + ".txt"));
+
+            for (int i = 0; i < max; i++) {
+
+                long beforeTime = System.currentTimeMillis();
+                boolean success = send("openflow:1", "openflow:1:1");
+                System.out.println("success is: " + success);
+                long afterTime = System.currentTimeMillis();
+                long totalTime = afterTime - beforeTime;
+                list[i] = totalTime;
+                list1.add(totalTime);
+                sum += totalTime;
+
+            }
+
+
+            System.out.println(list1);
+            System.out.println("sum is: " + sum);
+            System.out.println("max is: " + max);
+            System.out.println("average: " + sum / max);
+            for (int i = 0; i < max; ++i) {
+                out.write(list[i] + "\n");
+            }
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
     public boolean send(String edge_switch, String edge_nodeconnector) {
 
         LOG.debug("Start executing RPC");
 
         // create the flow
         Flow createdFlow = createFlow(edge_nodeconnector);
+
+        flows.add(createdFlow);
 
         // build instance identifier for flow
         InstanceIdentifier<Flow> flowPath = InstanceIdentifier
@@ -152,6 +286,7 @@ public class SwitchConfigurator {
     private Flow createFlow(String edge_nodeconnector) {
 
 
+        ++id;
         String macaddress = randomMACAddress();
 
         FlowBuilder flowBuilder = new FlowBuilder() //
@@ -203,12 +338,13 @@ public class SwitchConfigurator {
         // Put our Instruction in a list of Instructions
         flowBuilder
                 .setMatch(match)
+                .setId(new FlowId(String.valueOf(id)))
                 .setBufferId(OFConstants.OFP_NO_BUFFER)
                 .setInstructions(applyInstructions)
                 .setPriority(1000)
-                .setHardTimeout((int) 300)
+                .setHardTimeout(0)
                 .setIdleTimeout(0)
-                .setCookie(new FlowCookie(BigInteger.valueOf(flowCookieInc.getAndIncrement())))
+                //.setCookie(new FlowCookie(BigInteger.valueOf(flowCookieInc.getAndIncrement())))
                 .setFlags(new FlowModFlags(false, false, false, false, false));
 
         return flowBuilder.build();

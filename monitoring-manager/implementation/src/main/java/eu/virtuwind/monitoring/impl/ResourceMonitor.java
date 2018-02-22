@@ -72,7 +72,14 @@ public class ResourceMonitor implements MonitoringService {
 
     public Future<RpcResult<InstallFlowOutput>> installFlow() {
         InstallFlowOutputBuilder output = new InstallFlowOutputBuilder();
-        String result = String.valueOf(SwitchConfigurator.getInstance().send("openflow:1","openflow:1:43"));
+        String result = String.valueOf(SwitchConfigurator.getInstance().send("openflow:1","openflow:1:1"));
+        output.setSuccess(result);
+        return RpcResultBuilder.success(output.build()).buildFuture();
+    }
+
+    public Future<RpcResult<DeleteFlowOutput>> deleteFlow() {
+        DeleteFlowOutputBuilder output = new DeleteFlowOutputBuilder();
+        String result = String.valueOf(SwitchConfigurator.getInstance().removeFlows());
         output.setSuccess(result);
         return RpcResultBuilder.success(output.build()).buildFuture();
     }

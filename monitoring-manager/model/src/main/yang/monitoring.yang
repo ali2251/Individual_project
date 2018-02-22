@@ -33,6 +33,15 @@ module monitoring {
 
      }
 
+   rpc delete-flow{
+
+        output {
+            leaf success {
+                type string;
+            }
+        }
+
+     }
 
     notification topologyChanged {
           leaf topologyChange {

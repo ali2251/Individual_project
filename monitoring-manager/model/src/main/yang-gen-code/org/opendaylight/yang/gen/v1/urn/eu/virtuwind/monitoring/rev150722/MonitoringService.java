@@ -22,6 +22,13 @@ import java.util.concurrent.Future;
  *         }
  *     }
  * }
+ * rpc delete-flow {
+ *     output {
+ *         leaf success {
+ *             type string;
+ *         }
+ *     }
+ * }
  * </pre>
  *
  */
@@ -36,6 +43,8 @@ public interface MonitoringService
     Future<RpcResult<GetStatsOutput>> getStats();
     
     Future<RpcResult<InstallFlowOutput>> installFlow();
+    
+    Future<RpcResult<DeleteFlowOutput>> deleteFlow();
 
 }
 
