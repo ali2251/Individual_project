@@ -185,7 +185,7 @@ public class SwitchConfigurator {
             for (int i = 0; i < max; i++) {
 
                 long beforeTime = System.currentTimeMillis();
-                boolean success = send("openflow:1", "openflow:1:1");
+                boolean success = send("openflow:1", "openflow:1:43");
                 System.out.println("success is: " + success);
                 long afterTime = System.currentTimeMillis();
                 long totalTime = afterTime - beforeTime;
