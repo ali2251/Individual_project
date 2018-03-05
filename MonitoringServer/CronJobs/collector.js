@@ -1,11 +1,12 @@
+'use strict';
 const request = require('request');
 const rp = require('request-promise');
 const mongoose = require('mongoose');
 const Link = require('../models/Link');
 const cron = require('node-cron');
 let counter = 0;
-mongoose.connect('mongodb://localhost/test6');
-
+mongoose.connect('mongodb://localhost/test7');
+getAndStoreDataInDatabase();
 
 cron.schedule('* * * * *', function(){
   ++counter;
@@ -15,9 +16,9 @@ cron.schedule('* * * * *', function(){
 
 
 function getAndStoreDataInDatabase() {
-  links = [];
+var links = [];
   rp.post(
-      'http://localhost:8181/restconf/operations/monitoring:get-stats',
+      'http://192.168.133.24:8181/restconf/operations/monitoring:get-stats',
       { 'auth': {
       'user': 'admin',
       'pass': 'admin',
@@ -41,7 +42,8 @@ function getAndStoreDataInDatabase() {
               packetloss: 0,
               latency: 0,
               jitter: 0,
-              throughput: 0
+              throughput: 0,
+	      date: new Date()
             }
 
             let firstLinkAttributes = firstLink[0].split("=")[1]
