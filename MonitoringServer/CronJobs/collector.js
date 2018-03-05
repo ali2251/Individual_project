@@ -64,7 +64,8 @@ function getAndStoreDataInDatabase() {
                 packetloss: 0,
                 latency: 0,
                 jitter: 0,
-                throughput: 0
+                throughput: 0,
+                date: new Date()
               }
 
                 let current = split[i].split(",")
@@ -109,7 +110,8 @@ function getAndStoreDataInDatabase() {
                 packetloss: link.packetloss,
                 latency:    link.latency,
                 jitter:     link.jitter,
-                throughput: link.throughput
+                throughput: link.throughput,
+                date: link.date
 
               }}).then((res) => {
                 return new Promise(function(resolve, reject) {
@@ -122,7 +124,8 @@ function getAndStoreDataInDatabase() {
                         packetloss: link.packetloss,
                         latency:    link.latency,
                         jitter:     link.jitter,
-                        throughput: link.throughput
+                        throughput: link.throughput,
+                        date:       link.date
                       });
 
                   } else {
@@ -141,6 +144,7 @@ function getAndStoreDataInDatabase() {
                   last.latency.push(res.latency)
                   last.jitter.push(res.jitter)
                   last.throughput.push(res.throughput)
+                  last.date.push(res.date)
                 //  console.log("ID ",last.id);
                   last.save((callback) =>{
                     //console.log(callback, " callback");

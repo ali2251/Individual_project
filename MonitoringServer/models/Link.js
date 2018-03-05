@@ -8,8 +8,8 @@ const Link = mongoose.model(
     packetloss:  [Number],
     latency:     [Number],
     jitter:      [Number],
-    throughput:  [Number]
-
+    throughput:  [Number],
+    date:       [Date]
   });
 
 module.exports = Link;
