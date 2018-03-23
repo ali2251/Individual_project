@@ -32,10 +32,10 @@ const influx = new Influx.InfluxDB({
 mongoose.connect('mongodb://localhost/test7');
 getAndStoreDataInDatabase();
 
-cron.schedule('* * * * *', function(){
+cron.schedule('* * * * * *', function(){
   ++counter;
   getAndStoreDataInDatabase();
-  console.log('running a task every minute', "counter: ", counter);
+  console.log('running a task every sec', "counter: ", counter);
 });
 
 
