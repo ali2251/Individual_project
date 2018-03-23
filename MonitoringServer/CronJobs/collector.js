@@ -4,7 +4,31 @@ const rp = require('request-promise');
 const mongoose = require('mongoose');
 const Link = require('../models/Link');
 const cron = require('node-cron');
+const os = require('os')
+const Influx = require('influx')
 let counter = 0;
+
+
+const influx = new Influx.InfluxDB({
+  host: 'localhost',
+  database: 'express_response_db',
+  schema: [
+    {
+      measurement: 'response_times',
+      fields: {
+        latency: Influx.FieldType.INTEGER,
+        jitter: Influx.FieldType.INTEGER,
+        throughput: Influx.FieldType.INTEGER,
+        bandwidth: Influx.FieldType.INTEGER,
+        packetloss: Influx.FieldType.INTEGER
+      },
+      tags: [
+        'linkId'
+      ]
+    }
+  ]
+})
+
 mongoose.connect('mongodb://localhost/test7');
 getAndStoreDataInDatabase();
 
@@ -43,7 +67,7 @@ var links = [];
               latency: 0,
               jitter: 0,
               throughput: 0,
-	      date: new Date()
+	            date: new Date()
             }
 
             let firstLinkAttributes = firstLink[0].split("=")[1]
@@ -107,6 +131,23 @@ var links = [];
           //  console.log("I know what i am doing")
             res.forEach((link) => {
             //  console.log(" ------------ ", link);
+
+            influx.writePoints([
+              {
+                measurement: 'response_times',
+                tags: { linkId: link.linkid },
+                fields: {
+                          latency:link.latency,
+                          jitter: link.jitter,
+                          throughput:link.throughput,
+                          bandwidth:link.bandwidth,
+                          packetloss: link.packetloss
+                        }
+              }
+            ]).catch(err => {
+              console.error(`Error saving data to InfluxDB! ${err.stack}`)
+            })
+
               Link.findOneAndUpdate({id: link.linkid}, {$push: {
                 bandwidth:  link.bandwidth,
                 packetloss: link.packetloss,
