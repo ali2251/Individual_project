@@ -69,14 +69,11 @@ public class MonitoringProvider implements BindingAwareProvider, AutoCloseable {
         executor.schedule(new Runnable() {
             @Override
             public void run() {
-                System.out.println("meow");
-                LOG.info("Meow");
 
                 System.out.println( resourceMonitor.getAllLinksWithQos());
 
-                System.out.println("done with test");
+                System.out.println("Done with test");
 
-                //packetSender.sendPacket(new MacAddress("ae:bd:c7:94:15:ef"), new MacAddress("82:fe:07:dc:cb:cb"));
             }
         }, 1, TimeUnit.MINUTES);
 

@@ -41,8 +41,6 @@ public class LatencyMonitor implements MonitoringListener {
         packetSender = packetSender1;
     }
 
-    public LatencyMonitor() {
-    }
 
 
     public void onTopologyChanged(TopologyChanged notification) {
@@ -51,8 +49,6 @@ public class LatencyMonitor implements MonitoringListener {
 
     public void onLatencyPacket(LatencyPacket notification) {
 
-        // System.out.println("Reched here");
-        //System.out.println(notification.getLatency());
     }
 
 
@@ -62,8 +58,6 @@ public class LatencyMonitor implements MonitoringListener {
         String node_id = link.getSource().getSourceNode().getValue();
         String node_connector_id = link.getSource().getSourceTp().getValue();
 
-
-        // for (int i = 0; i < NUMBER_OF_PACKETS; i++) {
 
         latency = -10000000L;
 
@@ -104,7 +98,6 @@ public class LatencyMonitor implements MonitoringListener {
             }
 
             for (int i = 0; i < 3; i++) {
-                System.out.println("start of for loop");
 
                 if (delay != 9999999L) {
                     break;
@@ -114,20 +107,18 @@ public class LatencyMonitor implements MonitoringListener {
                 try {
 
                     delay = f.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
-                    System.out.println("integer is... " + delay);
                     latencies.add(delay);
                     breakCounter = 0;
 
                 } catch (TimeoutException t) {
                     ++breakCounter;
-                    System.out.println("exception occured time");
+                    System.out.println("Timeout exception");
                     f.cancel(true);
 
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }
 
-                System.out.println("end of for loop");
 
             }
 
@@ -136,16 +127,18 @@ public class LatencyMonitor implements MonitoringListener {
         executorService.shutdownNow();
 
 
-        System.out.println("exited for loop");
-
-        System.out.println("list is " + latencies);
 
         Long latencyToreturn = 9999999L;
         Long jitter = 9999999L;
 
         if (latencies.contains(9999999L)) {
             //not reloable latency
-            System.out.println("latency contains default value.........-");
+
+            for(Long l: latencies) {
+                if (l.equals(9999999L)) {
+                    latencies.remove(l);
+                }
+            }
 
         } else {
 
@@ -168,24 +161,11 @@ public class LatencyMonitor implements MonitoringListener {
 
             jitter = standardDaviation.longValue();
 
-
-            System.out.println("returning average latency " + latencyToreturn);
-
         }
 
 
 
         return new LatencyJitterWrapper(latencyToreturn, jitter);
-        // averageLatency += latency;
-
-        //}
-
-
-        //Long latencyToreturn = delay; //averageLatency / NUMBER_OF_PACKETS;
-
-
-        //return latencyToreturn / 1000;
-
 
     }
 
