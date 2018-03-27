@@ -82,6 +82,6 @@ app.use(function(err, req, res, next) {
 });
 
 
-//app.listen(port);
-https.createServer(options, app).listen(3000);
+app.listen(port);
+//https.createServer(options, app).listen(3000);
 console.log("server running on port: "+port)

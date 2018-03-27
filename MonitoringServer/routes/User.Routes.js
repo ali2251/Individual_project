@@ -34,4 +34,10 @@ routes.get('/getAllLinks', User.getAllLinks)
 
 routes.get('/getLinkFromId', User.getLinkFromId)
 
+routes.post('/signup', User.signup);
+
+routes.post('/approve', User.approve);
+
+routes.post('/getAllUserLinks', User.getAllUserLinks);
+
 module.exports = routes;
