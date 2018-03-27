@@ -7,14 +7,12 @@ port = 3000,
 bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var cookieParser = require('cookie-parser')
-var passport = require('passport');
 var flash = require('connect-flash')
 var expressSession = require('express-session');
 var logger = require('morgan');
 var routes = require('./routes');
 var http = require('http').Server(app);
 var busboy = require('connect-busboy');
-var NodeSession = require('node-session');
 var fs = require('fs');
 
 var key = fs.readFileSync('certificates/domain.key');
@@ -29,7 +27,6 @@ var options = {
   ca: cert
 };
 
-var nodeSession = new NodeSession({secret: 'Q3UBzdH9GEfiRCTKbi5MTPyChpzXLsTD'});
 
 
 function session(req, res, next){
@@ -41,8 +38,6 @@ function session(req, res, next){
 //db connection
 mongoose.connect('mongodb://localhost/test7');
 
-//configs
-//require('./config/passport')(passport);
 
 //middleware
 app.use(expressSession({secret: 'mlb'}));
@@ -51,8 +46,7 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
-app.use(passport.initialize());
-app.use(passport.session());
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
